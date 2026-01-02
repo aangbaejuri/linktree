@@ -1,0 +1,53 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Force HTTPS
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    
+    # LinkTree custom URL routing
+    RewriteRule ^lt/([a-zA-Z0-9_-]+)$ lt/index.php?url=$1 [L,QSA]
+    
+    # Redirect /index (with or without trailing slash) to /
+    RewriteRule ^index/?$ / [R=301,L]
+    
+    # Redirect /index.php to /
+    RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/+index\.php[?\s] [NC]
+    RewriteRule ^ / [R=301,L]
+    
+    # Redirect any /index/something to /
+    RewriteRule ^index/.* / [R=301,L]
+    
+    # Remove .php extension (serve)
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}\.php -f
+    RewriteRule ^(.*)$ $1.php [L,QSA]
+    
+    # Remove .html extension (serve)
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}\.html -f
+    RewriteRule ^(.*)$ $1.html [L,QSA]
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Security Headers
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set X-Frame-Options "SAMEORIGIN"
+</IfModule>
+
+# Error Pages - redirect to home
+ErrorDocument 400 /
+ErrorDocument 401 /
+ErrorDocument 403 /
+ErrorDocument 404 /
+ErrorDocument 500 /
+ErrorDocument 503 /
+
+# Block sensitive files
+<FilesMatch "\.(htaccess|htpasswd|ini|phps|fla|psd|log|sh|zip|rar|tar|bak)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
